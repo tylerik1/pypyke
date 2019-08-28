@@ -1,0 +1,61 @@
+This framework uses Python3.  Download the lastest version from https://www.python.org/downloads/.  
+Select the advanced setup option and allow the installer to add python to the system path.
+Since I used this framework to test AWS and some Selenium the following are the pip packages I used:
+
+webdriverwrapper
+requests
+boto3
+paramiko
+pylint
+selenium
+
+*** if you get an error about the asset folder not being found, add the \pypyke repo folder to your ENVIORNMENT VARIABLES
+path under the name PYTHONPATH: C:\PATH\TO\YOUR\pypyke ***
+
+
+
+Adding tests to test suites:
+To add tests to a test suite add one or more of the following decorators to the function you wish to test.
+
+@unit
+@functional
+@regression
+@smoke
+
+
+eg. add create_application to the smoke suite and regression suite.
+
+@smoke
+@regression
+def create_application():
+    ...
+
+
+Running tests:
+
+Tests can be run as standalone or as part of a test suite.  
+
+    Standalone:
+    To run a test as a standalone test, navigate to the location of the test or provide the full path of the file that contains the test.
+
+        running the code to create an application using the REST api.
+        eg. python C:\PATH\TO\pypyke\tests\architecture\register_application.py action_rest 
+
+
+  
+    Test suite:
+    To run a test suite, navigate to the \pypyke folder or provide the full path of the "test_set_runner.py" file.  The following
+    are the available suites to run:
+
+    smoke_test
+    unit_test
+    functional_test
+    regression_test
+    all
+
+    example to run all the tests that have been tagged @smoke
+    eg. python C:\PATH\TO\pypyke\test_set_runner.py smoke_test
+
+    example to run all tests that have been tagged as @smoke and @regression
+    eg. python C:\PATH\TO\pypyke\test_set_runner.py smoke_test regression_test
+
