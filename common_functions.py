@@ -16,6 +16,7 @@ from webdriverwrapper import Chrome
 
 
 
+
 def setup_logger():
     '''
     Sets up a logger object
@@ -38,7 +39,10 @@ def setup_logger():
         if my_file.exists():
             file_handler = logging.FileHandler(os.path.join(current, "logs", "testing.log"))
         else:
-            os.makedirs(os.path.dirname(os.path.join(current, "logs", "testing.log")))
+            try:
+                os.makedirs(os.path.dirname(os.path.join(current, "logs", "testing.log")))
+            except:
+                pass
             file_handler = logging.FileHandler(os.path.join(current, "logs", "testing.log"))
 
     file_handler.setLevel(logging.DEBUG)
@@ -56,14 +60,13 @@ def setup_logger():
     return logger
 
 
-def setup_driver(name, logger):
+def setup_driver(logger, name=None):
     '''
     Configures the Chrome driver to run on Jenkins or Windows.
     Also creates and sets the screenshot path
     '''
     date = datetime.datetime.now()
     date = str(date).replace(':', '_').replace('.', '_')
-
     if platform.system() == "Linux":
         my_file = Path("pypyke/screenshots/")
         if my_file.exists():
@@ -99,8 +102,11 @@ def setup_driver(name, logger):
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--window-size=1420,1080')
         logger.info("detected Windows OS")
-
-    driver = Chrome(chrome_options=chrome_options)
+    
+    if current:
+        driver = Chrome(str(current)+"\\chromedriver.exe",chrome_options=chrome_options)
+    else:
+        driver = Chrome(chrome_options=chrome_options)
     driver.screenshot_path = screenshot_path
     logger.info("driver object has been created.")
     return driver
@@ -113,7 +119,6 @@ def make_screenshot(driver, description, logger):
     :param description: description of screenshot
     :return: Takes a screenshot
     '''
-    logger.info("screenshot here")
     date = datetime.datetime.now()
     date = str(date).replace(' ', '_').replace('.', '').replace(':', '').replace('-', '')
     driver.make_screenshot(date + '_' + description)

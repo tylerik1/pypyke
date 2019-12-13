@@ -15,9 +15,10 @@ the function being called by exec.
 import sys
 import common_functions
 from decorators import group_tags
-from tests.architecture import * #import all tests under the architecture folder
-from tests.infrastructure import * #import all tests under the infrastructure folder
 
+
+
+from tests.architecture.add_to_cart import *
 
 SMOKE_TESTS, UNIT_TESTS, FUNCTIONAL_TESTS, REGRESSION_TESTS = group_tags()
 
@@ -36,6 +37,8 @@ def _test_formatter(suite):
     fail = 0
     fail_list = []
     logger = common_functions.setup_logger()
+
+    
     logger.info("#"*75 + "\n" + " "*12 + "#"*75)
     logger.info("Starting new " + suite +" Test")
     for tst in test_list:

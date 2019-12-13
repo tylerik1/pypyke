@@ -22,9 +22,9 @@ class TagDecorator():
     def __str__(self):
         return "<TagDecorator {tag_name}>".format(tag_name=self.tag_name)
 
-    def __call__(self, funtion):
-        self.functions.append(funtion)
-        return funtion
+    def __call__(self, function):
+        self.functions.append(function)
+        return function
 
     def invoke(self, *args, **kwargs):
         '''

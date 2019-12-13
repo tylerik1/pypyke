@@ -1,20 +1,24 @@
+Setup:
+
 This framework uses Python3.  Download the lastest version from https://www.python.org/downloads/.  
 Select the advanced setup option and allow the installer to add python to the system path.
-Since I used this framework to test AWS and some Selenium the following are the pip packages I used:
+Once python is installed, install all the following packages using "pip install -m package_name" from your cmd:
 
-webdriverwrapper
-requests
-boto3
-paramiko
-pylint
-selenium
+"pip install webdriverwrapper requests boto3 paramiko pylint selenium"
+
 
 *** if you get an error about the asset folder not being found, add the \pypyke repo folder to your ENVIORNMENT VARIABLES
 path under the name PYTHONPATH: C:\PATH\TO\YOUR\pypyke ***
 
 
+Install ChromeDriver for windows here https://sites.google.com/a/chromium.org/chromedriver/home
+Paste the copy of chromedriver.exe into the pypyke folder.
+
+
+
 
 Adding tests to test suites:
+
 To add tests to a test suite add one or more of the following decorators to the function you wish to test.
 
 @unit
@@ -29,6 +33,8 @@ eg. add create_application to the smoke suite and regression suite.
 @regression
 def create_application():
     ...
+
+
 
 
 Running tests:
@@ -58,4 +64,23 @@ Tests can be run as standalone or as part of a test suite.
 
     example to run all tests that have been tagged as @smoke and @regression
     eg. python C:\PATH\TO\pypyke\test_set_runner.py smoke_test regression_test
+
+
+
+
+Modifying the framework:
+if you plan to add nested directories under the architecture or infrastructure folders you will need to add an __init__.py file under that 
+directory with the following code.  
+
+"""
+import os
+import pkgutil
+
+__all__ = list(module for _, module, _ in pkgutil.iter_modules([os.path.dirname(__file__)]))
+"""
+
+This will allow the test_set_runner to pickup all of your tests under that directory.  Make sure to also import the new directory into the 
+test_set_runner.py file with the following convention:
+
+"from tests.architecture.new_directory import *"
 
