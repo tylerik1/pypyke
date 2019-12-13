@@ -2,7 +2,7 @@
 '''
 Created on Feb 15, 2019
 
-@author: erik.kniaz & tommy.nguyen
+@author: erik.kniaz
 '''
 import datetime
 import logging
