@@ -5,51 +5,24 @@ Created on Feb 28, 2019
 @author: erik.kniaz
 '''
 
-import functools
+from functools import wraps
 import os
 import ntpath
+import re
+
+def tag(*args, **kwargs):
+    """Decorator that adds attributes to classes or functions
+    for use with the Attribute (-a) plugin.
+    """
+    def wrap_ob(ob):
+        for name in args:
+            setattr(ob, name, True)
+        for name, value in kwargs:
+            setattr(ob, name, value)
+        return ob
+    return wrap_ob
 
 
-class TagDecorator():
-    '''
-    Class to create tags
-    '''
-
-    def __init__(self, tag_name):
-        self.functions = []
-        self.tag_name = tag_name
-
-    def __str__(self):
-        return "<TagDecorator {tag_name}>".format(tag_name=self.tag_name)
-
-    def __call__(self, function):
-        self.functions.append(function)
-        return function
-
-    def invoke(self, *args, **kwargs):
-        '''
-        runs the functions locally
-        '''
-        return [f(*args, **kwargs) for f in self.functions]
-
-
-
-
-@functools.lru_cache(maxsize=None)  # memoization
-def get_func_tag(tag_name):
-    '''
-    initalizes the tag name
-    '''
-    return TagDecorator(tag_name)
-
-
-
-
-#List of tag names
-smoke = get_func_tag('smoke')
-unit = get_func_tag("unit")
-functional = get_func_tag("functional")
-regression = get_func_tag("regression")
 
 
 
@@ -90,6 +63,7 @@ def group_tags():
         path_list = find_files_in_folder(dir_name, path_list, extension, True)
         path_list.remove(os.path.join(current, "decorators.py"))
         path_list.remove(os.path.join(current, "test_set_runner.py"))
+        path_list.remove(os.path.join(current, "parsing.py"))
     except:
         dir_name = r'pypyke'
         extension = ".py"
@@ -100,38 +74,44 @@ def group_tags():
 
 
     #parse each file and save each function and its decorators
-    tags = ["@smoke", "@unit", "@functional", "@regression"]
     func_names = []
+    tags = []
     for py_file in path_list:
         count = 0
         lines = open(py_file).readlines()
         for line in lines:
             count += 1
-            for tag in tags:
-                if tag in line:
-                    index = count
+            #if tag is commented out, skip it
+            if "#@tag(" in line:
+                continue
+            if "@tag(" in line:
+                index = count
+                result = re.findall("'([^']*)'", line)
+                if not result:
+                    result = re.findall('"([^"]*)"', line)
+                for str in result:
+                    tags.append(str)
                     while "@" in lines[index]:
                         index += 1
                     save_line = index
                     if "def" in lines[save_line]:
-                        func_names.append((tag, (ntpath.basename(py_file)[:-3], lines[save_line].replace("def ", "").replace(":\n", ""))))
+                        #func_names.append((str, (ntpath.basename(py_file)[:-3], lines[save_line].replace("def ", "").replace(":\n", ""))))
+                        func_names.append((str, (py_file.split('architecture')[1].replace('\\', ".").strip('.')[:-3], lines[save_line].replace("def ", "").replace(":\n", ""))))
 
+    tag_set = list(set(tags))
     func_names = list(set(func_names))
 
-    #move each function into a test set to be run
-    smoke_tests = []
-    unit_tests = []
-    functional_tests = []
-    regression_tests = []
 
-    for function in func_names:
-        if function[0] == "@smoke":
-            smoke_tests.append(function[1])
-        elif function[0] == "@unit":
-            unit_tests.append(function[1])
-        elif function[0] == "@functional":
-            functional_tests.append(function[1])
-        elif function[0] == "@regression":
-            regression_tests.append(function[1])
+    test_list = {}
 
-    return smoke_tests, unit_tests, functional_tests, regression_tests
+    for i, tag in enumerate(tag_set):
+        test_list[tag] = i
+
+    for tag in tag_set:
+        temp_list = []
+        for function in func_names:
+            if function[0] == tag:
+                temp_list.append(function[1])
+        test_list[tag] = temp_list
+
+    return test_list

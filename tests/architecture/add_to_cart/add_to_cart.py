@@ -25,7 +25,7 @@ def add_first_toaster_to_cart(logger):
     helpers.add_to_cart(driver, logger)
 
 @regression
-def add_second_toothbrush_to_cart(logger):
+def add_third_toothbrush_to_cart(logger):
     driver = common_functions.setup_driver(logger, "add_second_toothbrush_to_cart")
     
     driver.get("https://www.amazon.com")
@@ -34,12 +34,12 @@ def add_second_toothbrush_to_cart(logger):
     
     helpers.search_for_item(driver, logger, "toothbrush")
     
-    helpers.select_item(driver, 1, logger)
+    helpers.select_item(driver, 2, logger)
 
     helpers.add_to_cart(driver, logger)
 
 
 if __name__ == '__main__':
     logger = common_functions.setup_logger()
-    #add_second_toothbrush_to_cart(logger)
+    add_third_toothbrush_to_cart(logger)
     globals()[sys.argv[1]](logger)
