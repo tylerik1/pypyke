@@ -25,9 +25,9 @@ def _test_formatter(suite_list):
     success = 0
     fail = 0
     fail_list = []
-    logger = setup_functions.setup_logger()
+    logger = setup_functions.setup_logger() # this logger is for the logging functions in this file.  Not for exec.
     suites_ran = []
-	tests_ran = []
+    tests_ran = []
 	
     for suite, tests in TEST_LIST.items():
         if suite in suite_list:
@@ -35,33 +35,33 @@ def _test_formatter(suite_list):
             logger.info("#" * 75 + "\n" + " " * 12 + "#" * 75)
             logger.info("Starting new " + suite + " Test")
             for test in tests:
-				tests_ran.append(test[1].replace("(logger)", ""))
-				logger.info("*" * 75 + "\n" + " " * 12 + "*" * 75)
-				logger.info("Running test: %s", test[1])
-				error_list = []
-				retries = 0
-				while retries < 2:
-					try:
-						result = eval(test[0] + '.' + test[1])
-						if result != False:
-							success += 1
-							break
-						else:
-							logger.error(test[1] + " has FAILED!!!")
-							logger.info("The end state is not correct!!!")
-							fail += 1
-							fail_list.append(test[1].replace("(logger)", ""))
-							break
-					except Exception as error:
-						retries += 1
-						error_list.append(error)
-						if retries >= 2:
-							fail += 1
-							fail_list.append(test[1].replace("(logger)", ""))
-							logger.error("After 2 attempts, " + test[1] + " has FAILED!!!")
-							logger.info("The list of errors encountered are\n" + " " * 12 + ("\n" + " " * 12).join(str(_test) for _test in error_list))
+		tests_ran.append(test[1].replace("(logger)", ""))
+		logger.info("*" * 75 + "\n" + " " * 12 + "*" * 75)
+		logger.info("Running test: %s", test[1])
+		error_list = []
+		retries = 0
+		while retries < 2:
+		    try:
+			result = eval(test[0] + '.' + test[1])
+			if result != False:
+			    success += 1
+			    break
+			else:
+			    logger.error(test[1] + " has FAILED!!!")
+			    logger.info("The end state is not correct!!!")
+			    fail += 1
+			    fail_list.append(test[1].replace("(logger)", ""))
+			    break
+		    except Exception as error:
+			retries += 1
+			error_list.append(error)
+			if retries >= 2:
+			    fail += 1
+			    fail_list.append(test[1].replace("(logger)", ""))
+			    logger.error("After 2 attempts, " + test[1] + " has FAILED!!!")
+			    logger.info("The list of errors encountered are\n" + " " * 12 + ("\n" + " " * 12).join(str(_test) for _test in error_list))
 
-				count += 1
+		count += 1
 
     logger.info(str(suites_ran) + " Testing has completed")
     logger.info("#" * 75)
