@@ -84,8 +84,9 @@ import pkgutil
 __all__ = list(module for _, module, _ in pkgutil.iter_modules([os.path.dirname(__file__)]))
 """
 
-This will allow the test_set_runner to pickup all of your tests under that directory.  Make sure to also import the new directory into the 
-test_set_runner.py file with the following convention:
+This will allow the test_set_runner to pickup all of your tests under that directory.  Make sure to also import all the new tests in new directory into the architecture folders
+init.py file with the following convention:
 
 "from tests.architecture.new_directory import *"
 
+***take a look at the imports of tests/architecture/init.py as an example***
