@@ -7,30 +7,33 @@ Once python is installed, install all the following packages using "pip install 
 "pip install webdriverwrapper requests boto3 paramiko pylint selenium"
 
 
-*** if you get an error about the asset folder not being found, add the \pypyke repo folder to your ENVIORNMENT VARIABLES
+*** if you get an error about folders not being found, add the \pypyke repository folder to your ENVIORNMENT VARIABLES
 path under the name PYTHONPATH: C:\PATH\TO\YOUR\pypyke ***
 
-
-Install ChromeDriver for windows here https://sites.google.com/a/chromium.org/chromedriver/home
-Paste the copy of chromedriver.exe into the pypyke folder.
+You can update ChromeDriver for windows here https://sites.google.com/a/chromium.org/chromedriver/home
+Paste the copy of chromedriver.exe into the root pypyke folder.
 
 
 
 
 Adding tests to test suites:
 
-To add tests to a test suite add one or more of the following decorators to the function you wish to test.
+To add tests to a test suite you can tag tests using the following format:
 
-@unit
-@functional
-@regression
-@smoke
+@tag('regression')
+@tag('my_test', 'smoke')
 
 
 eg. add create_application to the smoke suite and regression suite.
 
-@smoke
-@regression
+@tag('smoke', 'regression')
+def create_application():
+    ...
+    
+OR
+
+@tag('smoke')
+@tag('regression')
 def create_application():
     ...
 
@@ -50,26 +53,28 @@ Tests can be run as standalone or as part of a test suite.
 
   
     Test suite:
-    To run a test suite, navigate to the \pypyke folder or provide the full path of the "test_set_runner.py" file.  The following
+    To run a test suite, navigate to the root \pypyke folder or provide the full path of the "test_set_runner.py" file.  The following
     are the available suites to run:
 
-    smoke_test
-    unit_test
-    functional_test
-    regression_test
-    all
+    single suite
+    multiple suites
+    all suites
 
-    example to run all the tests that have been tagged @smoke
+    example to run tests that have been tagged @tag('smoke_test')
     eg. python C:\PATH\TO\pypyke\test_set_runner.py smoke_test
 
-    example to run all tests that have been tagged as @smoke and @regression
+    example to run tests that have been tagged @tag('smoke_test') and @tag('regression_test')
     eg. python C:\PATH\TO\pypyke\test_set_runner.py smoke_test regression_test
+    
+    example to run all tagged tests
+    eg. python C:\PATH\TO\pypyke\test_set_runner.py all
+    
 
 
 
 
 Modifying the framework:
-if you plan to add nested directories under the architecture or infrastructure folders you will need to add an __init__.py file under that 
+if you plan to add new directories under the architecture or infrastructure folders you will need to add an __init__.py file under that 
 directory with the following code.  
 
 """
