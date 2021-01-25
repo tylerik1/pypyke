@@ -7,10 +7,9 @@ Created on Dec 10, 2019
 from tests.architecture.add_to_cart import helpers
 import common_functions
 import sys
-from decorators import unit,smoke,regression,functional
+import parsing
 
-@smoke
-@regression
+@tag('smoke')
 def add_first_toaster_to_cart(logger):
     driver = common_functions.setup_driver(logger, "add_first_toaster_to_cart")
     
@@ -24,7 +23,7 @@ def add_first_toaster_to_cart(logger):
 
     helpers.add_to_cart(driver, logger)
 
-@regression
+@tag('regression','smoke')
 def add_third_toothbrush_to_cart(logger):
     driver = common_functions.setup_driver(logger, "add_second_toothbrush_to_cart")
     
