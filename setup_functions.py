@@ -10,11 +10,10 @@ import os.path
 import platform
 import sys
 from pathlib import Path
+from time import sleep
 
 from selenium import webdriver
 from webdriverwrapper import Chrome
-
-
 
 
 def setup_logger():
@@ -60,13 +59,15 @@ def setup_logger():
     return logger
 
 
-def setup_driver(logger, name=None):
+def setup_driver(logger, name=None, performance_mode=False):
     '''
     Configures the Chrome driver to run on Jenkins or Windows.
     Also creates and sets the screenshot path
     '''
     date = datetime.datetime.now()
     date = str(date).replace(':', '_').replace('.', '_')
+    current = None
+
     if platform.system() == "Linux":
         my_file = Path("pypyke/screenshots/")
         if my_file.exists():
@@ -79,7 +80,7 @@ def setup_driver(logger, name=None):
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--window-size=1420,1080')
+        chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
         logger.info("detected Linux OS")
@@ -88,28 +89,51 @@ def setup_driver(logger, name=None):
         # if we are not in the python base directory then go to it
         while "pypyke\\" in str(current):
             current = Path(current).parent
-
         my_file = Path(os.path.join(current, "screenshots"))
         if my_file.exists():
-            os.mkdir(os.path.join(current, "screenshots", name + "_" + date))
+            try:
+                os.mkdir(os.path.join(current, "screenshots", name + "_" + date))
+            except:
+                sleep(1)
+                date = datetime.datetime.now()
+                date = str(date).replace(':', '_').replace('.', '_')
+                os.mkdir(os.path.join(current, "screenshots", name + "_" + date))
             screenshot_path = os.path.join(current, "screenshots", name + "_" + date)
         else:
-            os.mkdir(os.path.join(current, "screenshots"))
-            os.mkdir(os.path.join(current, "screenshots", name + "_" + date))
+            try:
+                os.mkdir(os.path.join(current, "screenshots"))
+                os.mkdir(os.path.join(current, "screenshots", name + "_" + date))
+            except:
+                sleep(1)
+                date = datetime.datetime.now()
+                date = str(date).replace(':', '_').replace('.', '_')
+                os.mkdir(os.path.join(current, "screenshots"))
+                os.mkdir(os.path.join(current, "screenshots", name + "_" + date))
             screenshot_path = os.path.join(current, "screenshots", name + "_" + date)
 
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--window-size=1420,1080')
+        if performance_mode:
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--window-size=1920,1080')
+            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--disable-gpu')
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+        else:
+            chrome_options = webdriver.ChromeOptions()
+            #chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            chrome_options.add_argument('--window-size=1920,1080')
         logger.info("detected Windows OS")
-    
+
     if current:
-        driver = Chrome(str(current)+"\\chromedriver.exe",chrome_options=chrome_options)
+        driver = Chrome(str(current) + "\\chromedriver.exe", chrome_options=chrome_options)
     else:
-        driver = Chrome(chrome_options=chrome_options)
+        driver = Chrome("chromedriver", chrome_options=chrome_options)
+
     driver.screenshot_path = screenshot_path
     logger.info("driver object has been created.")
     return driver
+
 
 
 def make_screenshot(driver, description, logger):
