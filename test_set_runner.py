@@ -13,56 +13,160 @@ the function being called by exec.
 
 '''
 import sys
+import platform
 import setup_functions
-from parsing import group_tags
+import traceback
+
+from parsing import group_tags, get_functions
+from time import sleep
+import time
+from filelock import Timeout, FileLock
+import pandas
+
+
 from tests.architecture import *
 
 
-TEST_LIST = group_tags()
 
-def _test_formatter(suite_list):
+
+
+logger = setup_functions.setup_logger()
+#transfer_tests.transfer_js_debt_bem(logger, 'uat')
+#piv_tests.login_prod(logger)
+
+TEST_LIST = group_tags(logger)
+
+
+
+
+
+
+
+def _test_formatter(suite_list, **kwargs):
     count = 0
     success = 0
     fail = 0
     fail_list = []
-    logger = setup_functions.setup_logger() # this logger is for the logging functions in this file.  Not for exec.
+    logger = setup_functions.setup_logger()
     suites_ran = []
     tests_ran = []
-	
+
+    coverage_start = False
+
     for suite, tests in TEST_LIST.items():
-        if suite in suite_list:
+        if suite == suite_list:
             suites_ran.append(suite)
             logger.info("#" * 75 + "\n" + " " * 12 + "#" * 75)
             logger.info("Starting new " + suite + " Test")
             for test in tests:
-		tests_ran.append(test[1].replace("(logger)", ""))
-		logger.info("*" * 75 + "\n" + " " * 12 + "*" * 75)
-		logger.info("Running test: %s", test[1])
-		error_list = []
-		retries = 0
-		while retries < 2:
-		    try:
-			result = eval(test[0] + '.' + test[1])
-			if result != False:
-			    success += 1
-			    break
-			else:
-			    logger.error(test[1] + " has FAILED!!!")
-			    logger.info("The end state is not correct!!!")
-			    fail += 1
-			    fail_list.append(test[1].replace("(logger)", ""))
-			    break
-		    except Exception as error:
-			retries += 1
-			error_list.append(error)
-			if retries >= 2:
-			    fail += 1
-			    fail_list.append(test[1].replace("(logger)", ""))
-			    logger.error("After 2 attempts, " + test[1] + " has FAILED!!!")
-			    logger.info("The list of errors encountered are\n" + " " * 12 + ("\n" + " " * 12).join(str(_test) for _test in error_list))
+                tests_ran.append(test[1].replace("(logger, env=" + kwargs['env'] + ")", ""))
+                logger.info("*" * 75 + "\n" + " " * 12 + "*" * 75)
+                logger.info("Running test: %s", test[1].split("env='")[0] + "'" + kwargs['env'] + "')")
+                error_list = []
+                retries = 0
 
-		count += 1
+                while retries < 2:
+                    common_functions.cleanup_chromedriver(logger)
+                    sleep(1)
 
+                    try:
+                        driver = setup_functions.setup_driver(logger, str(test[1].split('(')[0]), performance_mode=False)
+                    except Exception as e:
+                        logger.info('Unable to create chromedriver instance.')
+                        logger.info(e)
+                        logger.info(traceback.print_exc())
+                        continue
+
+
+
+
+
+
+                    try:
+                        #print(test[0])
+                        #print(test[1])
+                        #logger.info(test[0].split('.')[1] + '.' + test[1].split("env='")[0] + "'" + kwargs['env'] + "')")
+                        if platform.system() == "Linux":
+                            if suite == 'bulk_parallel_process':
+                                if __name__ == '__main__':
+                                    function = 'bulk_parallel_process: function = ' + str(kwargs['function'])
+                                    result = parallel_processing.bulk_parallel_process(driver, logger, excel_file=kwargs['excel_file'],
+                                                                                       sheet=kwargs['sheet'],
+                                                                                       partitions=kwargs['partitions'], function=kwargs['function'], env=kwargs['env'])
+                            else:
+                                #formated as filename.testname(args)
+                                function = test[1].replace("env='uat'", "env='"+kwargs['env'] + "'")
+                                for key in kwargs:
+                                    if key + '=' in function:
+                                        function = function.replace(key + '=None', key + '=' + "'" + str(kwargs[key]) + "'")
+                                result = eval(test[0][1:].split("/")[1] + '.' + function)
+                        else:
+                            if suite == 'bulk_parallel_process':
+                                #print(test[0])
+                                #print('9'*99)
+                                #print(test[0] + '.bulk_parallel_process(logger, excel_file='+kwargs['excel_file']+', sheet='+kwargs['sheet'].strip("'")+ ', partitions='+kwargs['partitions']+ ', function='+kwargs['function']+ ', env='+kwargs['env']+ ')')
+                                if __name__ == '__main__':
+                                    function = 'bulk_parallel_process: function = ' + str(kwargs['function'])
+                                    result = parallel_processing.bulk_parallel_process(driver, logger, excel_file=kwargs['excel_file'],
+                                                                              sheet=kwargs['sheet'],
+                                                                              partitions=kwargs['partitions'], function=kwargs['function'], env=kwargs['env'])
+                            else:
+                                function = test[1].replace("env='uat'", "env='"+kwargs['env'] + "'")
+
+                                for key in kwargs:
+                                    if key+'=' in function:
+                                        function = function.replace(key + '=None', key + '=' + "'" + str(kwargs[key]) + "'")
+
+                                result = eval(test[0].split('.')[1] + '.' + function)
+
+
+                        if result:
+                            driver.quit()
+                            sleep(3)
+                            success += 1
+                            break
+                        else:
+                            try:
+                                setup_functions.make_screenshot(driver, str(test[1].split('(')[0]), logger)
+                            except Exception as e:
+                                logger.info('Unable to create screenshot due to: ' + str(e))
+                            driver.quit()
+                            sleep(3)
+                            logger.error(function + " has FAILED!!!")
+                            fail += 1
+                            fail_list.append(function)
+                            break
+                    except Exception as error:
+                        logger.info(error)
+                        logger.info(traceback.print_exc())
+                        if 'Max retries exceeded' in str(error):
+                            continue
+                        if 'Connection refused' in str(error):
+                            continue
+                        if 'invalid session id' in str(error):
+                            continue
+                        retries += 1
+                        error_list.append(error)
+                        if str(test[1].split('(')[0]) != 'bulk_parallel_process':
+                            try:
+                                setup_functions.make_screenshot(driver, str(test[1].split('(')[0]), logger)
+                            except Exception as e:
+                                logger.info('Unable to create screenshot due to: ' + str(e))
+                        if str(test[1].split('(')[0]) != 'bulk_parallel_process':
+                            driver.quit()
+                            sleep(3)
+                        if retries >= 2:
+                            fail += 1
+                            fail_list.append(function)
+                            logger.error("After 2 attempts, " + function + " has FAILED!!!")
+                            logger.info("The list of errors encountered are\n" + " " * 12 + ("\n" + " " * 12).join(str(_test) for _test in error_list))
+
+
+                count += 1
+
+
+    tests_ran = sorted(tests_ran)
+    fail_list = sorted(fail_list)
     logger.info(str(suites_ran) + " Testing has completed")
     logger.info("#" * 75)
     logger.info("Breakdown of tests:")
@@ -71,31 +175,50 @@ def _test_formatter(suite_list):
     logger.info("Tests failed: " + str(fail))
     if count == 0:
         logger.info("Pass rate: N/A")
+        return
     else:
         logger.info("Pass rate: " + str((success / count) * 100) + "%")
     if fail_list:
         logger.info("List of failed tests:\n" + " " * 12 + ("\n" + " " * 12).join(str(_test) for _test in fail_list))
     logger.info("#" * 75)
 
+    if (success / count) * 100 >= 75:
+        return True
+
+    return False
 
 
 if __name__ == '__main__':
-    # if all is specified then run all test suites
-    if sys.argv[1] == "all":
-       for suite in TEST_LIST.keys():
-           _test_formatter(suite)
 
-    # if multiple suits specified then run them
-    elif len(sys.argv) > 2:
-        TEST_SET = []
-        for test in sys.argv:
-            TEST_SET.append(test)
-        TEST_SET.pop(0)
 
-        for test in TEST_SET:
-            _test_formatter(test)
+    if sys.argv[1].lower() == "all":
+        for suite in TEST_LIST.keys():
+            print(TEST_LIST)
 
-    # if only one suit then run it
+            for arg in sys.argv[2:]:
+                if 'env' in arg.lower():
+                    _test_formatter(suite, **{'env': arg.split('=')[1]})
+
+
+
     else:
-        if str(sys.argv[1]) in TEST_LIST.keys():
-            _test_formatter([sys.argv[1]])
+        d = {}
+        args = sys.argv[2:]
+        for i in range(len(args)):
+            j = 1
+            combine = ''
+            if '=' in args[i]:
+                #save the key
+                key = args[i].split('=')[0]
+                try:
+                    #check to see if the next value is a kwarg.  If not combine the next args into a string and append to the value
+                    #This is to allow spaces in kwargs eg. sheet=this is my sheet
+                    while '=' not in args[i+j]:
+                        combine = combine + ' ' + args[i+j]
+                        j += 1
+                except:
+                    pass
+                value = args[i].split('=')[1] + combine
+            d[key] = value.strip("'\\").strip("'")
+        _test_formatter(sys.argv[1], **dict(d))
+
