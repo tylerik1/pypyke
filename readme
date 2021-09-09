@@ -4,7 +4,7 @@ This framework uses Python3.  Download the lastest version from https://www.pyth
 Select the advanced setup option and allow the installer to add python to the system path.
 Once python is installed, install all the following packages using "pip install -m package_name" from your cmd:
 
-"pip install webdriverwrapper requests boto3 paramiko pylint selenium"
+"pip install webdriverwrapper requests boto3 paramiko pylint selenium filelock pandas"
 
 
 *** if you get an error about folders not being found, add the \pypyke repository folder to your ENVIORNMENT VARIABLES
