@@ -1,0 +1,58 @@
+from parsing import tag
+from tests.architecture import common_functions
+from tests.architecture.parallel_processing_helper import _bulk_process
+import multiprocessing
+import sys
+import setup_functions
+
+
+
+@tag('bulk_parallel_process')
+def bulk_parallel_process(driver, logger, excel_file, sheet, partitions, function, function_args=None, env='uat', debug=False):
+    '''
+        This function will assist in speeding up the time it takes to bulk items from an excel file
+
+        logger (object:  the logging object
+        env (string): the full url or name of the environment
+        excel_file (string):  the full path to the excel file to read in
+        sheet (string):  the sheet name of the excel file to read and write to
+        function (string): the name of the function to run.
+        function_args (string): the required arguments of the function to run
+        partitions (string): the number of threads that will run concurrently.  (See "parse_excel_data" function for a more in depth description of how partitions are formed)
+    '''
+
+    partition = int(partitions)
+
+    performance_mode = True
+    if debug:
+        performance_mode = False
+
+    excel_data, write_column = common_functions.parse_excel_data(excel_file, logger, sheet_name=sheet, partitions=partition)
+
+    executor_url = driver.command_executor._url
+    session_id = driver.session_id
+
+    jobs = []
+    if partition == 1:
+        print("Number of partitions: 1")
+        p = multiprocessing.Process(target=_bulk_process, args=(logger, excel_file, excel_data, sheet, write_column, function, function_args, env, performance_mode, session_id, executor_url))
+        jobs.append(p)
+        p.start()
+    else:
+        print("Number of partitions: " + str(len(excel_data)))
+        count = 0
+        for item in excel_data:
+            p = multiprocessing.Process(target=_bulk_process, args=(logger, excel_file, item, sheet, write_column, function, function_args, env, performance_mode, session_id, executor_url))
+            jobs.append(p)
+            p.start()
+            count += 1
+
+    for proc in jobs:
+        proc.join()
+
+    return True
+
+
+if __name__ == '__main__':
+    logger = setup_functions.setup_logger()
+    globals()[sys.argv[1]](logger)
