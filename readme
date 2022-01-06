@@ -7,8 +7,7 @@ Once python is installed, install all the following packages using "pip install 
 "pip install webdriverwrapper requests boto3 paramiko pylint selenium filelock pandas"
 
 
-*** if you get an error about folders not being found, add the \pypyke repository folder to your ENVIORNMENT VARIABLES
-path under the name PYTHONPATH: C:\PATH\TO\YOUR\pypyke ***
+Run first_time_setup.py to configure the framework with the python path
 
 You can update ChromeDriver for windows here https://sites.google.com/a/chromium.org/chromedriver/home
 Paste the copy of chromedriver.exe into the root pypyke folder.
@@ -66,8 +65,6 @@ Tests can be run as standalone or as part of a test suite.
     example to run tests that have been tagged @tag('smoke_test') and @tag('regression_test')
     eg. python C:\PATH\TO\pypyke\test_set_runner.py smoke_test regression_test
     
-    example to run all tagged tests
-    eg. python C:\PATH\TO\pypyke\test_set_runner.py all
     
 
 
