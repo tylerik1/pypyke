@@ -10,5 +10,5 @@ if not existing_python_path:
 #if the path exists, append the framework to the end.  If the framework is already there, return
 else:
   if os.getcwd() in existing_python_path:
-    return
+    quit()
   os.environ['PYTHONPATH'] = existing_python_path + ";" + os.getcwd()
