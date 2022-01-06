@@ -13,8 +13,6 @@ You can update ChromeDriver for windows here https://sites.google.com/a/chromium
 Paste the copy of chromedriver.exe into the root pypyke folder.
 
 
-
-
 Adding tests to test suites:
 
 To add tests to a test suite you can tag tests using the following format:
